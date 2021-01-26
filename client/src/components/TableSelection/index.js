@@ -1,19 +1,35 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useSetTable, useTable } from "../../Contexts/table-context";
-import {useHistory} from 'react-router-dom';
+import {Redirect, useHistory} from 'react-router-dom';
+import { useUser } from "../../Contexts/user-context";
 
 function TableSelection() {
 
     const [tables, setTables] = useState([]);
 
-    axios.get("/api/table/getAll").then(res => {
-        setTables(res.data)
+    useEffect(() => {
+        let mounted = true;
+        axios.get("/api/table/getAll").then(res => {
+            if(mounted) {
+                setTables(res.data);
+            }
+        });
+
+        return () => {
+            mounted = false;
+        }
     })
 
     const setSelectedTable = useSetTable();
     const selectedTable = useTable();
+
+    //check if user is logged in
+    const user = useUser();
     const history = useHistory();
+    if(!user) {
+        return <Redirect to="/"/>
+    }
 
     return (
         <>
@@ -56,6 +72,7 @@ function TableSelection() {
 
 
                 <button className="btn btn-danger" onClick={() => {
+                    setSelectedTable(null);
                     history.push('/mainMenu');
                 }} style={{ position: "relative", left: "25px" }}>Exit</button>
             </div>
